@@ -33,10 +33,14 @@ export default {
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
-    'bootstrap-vue/nuxt',
     '@nuxtjs/axios',
-    '@nuxtjs/auth-next'
+    '@nuxtjs/auth-next',
+    'bootstrap-vue/nuxt'
   ],
+
+  bootstrapVue: {
+    icons: true
+  },
 
   router: {
     middleware: ["auth"]

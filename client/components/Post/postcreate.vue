@@ -49,7 +49,7 @@ form {
     max-width: 700px;
     margin: auto;
     margin-top: 40px;
-    background-color: #343A40;
+    background-color: #282C31;
     padding: 20px 20px;
     border-radius: 10px;
 
@@ -64,8 +64,14 @@ form {
     }
 
     textarea {
+        border-radius: 20px;
+        border: none;
         margin-top: 5px;
         margin-bottom: 20px;
+
+        &:focus {
+            box-shadow: none;
+        }
     }
 
     .wrapper {
@@ -74,6 +80,7 @@ form {
 
     button {
         width: 100%;
+        border-radius: 20px;
     }
 
     .notAllow {

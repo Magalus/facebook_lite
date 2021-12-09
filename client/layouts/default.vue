@@ -20,6 +20,7 @@ export default {
 
 .page {
     min-height: 100vh;
+    padding-bottom: 20px;
 }
 
 .isLog {
