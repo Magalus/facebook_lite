@@ -5,7 +5,7 @@
         <div class="header">
             <div>
                 <span class="userName">{{myPost.user.name}}</span>
-                <span>{{myPost.created_at}}</span>
+                <span>{{myPost.created_at.slice(7)}}</span>
             </div>
             <div v-if="ownPost" >
                 <b-dropdown no-caret text="...">
@@ -30,32 +30,34 @@
             </b-form>
         </div>
         <div class="footer">
-            <div>
+            <div @mouseover="hovered = true" @mouseleave="hovered = false">
                 <b-icon v-if="!isPostLike" icon="heart"></b-icon>
                 <b-icon v-else icon="heart-fill"></b-icon>
-                15
+                {{ myPost.like_count}}
             </div>
-            <div @click="commentPart = !commentPart">10 commentaires</div>
+            <div v-if="postLikeUserName.length > 0 && hovered" class="showName">
+                <div v-for="(name, index) in postLikeUserName" :key="index"> {{name}} </div>
+            </div>
+            <div class="comments" @click="commentPart = !commentPart">{{comments.length}} commentaire<span v-if="comments.length > 1">s</span></div>
         </div>
         <div class="line"></div>
         <div class="interaction">
-            <span @click="isPostLike = !isPostLike" :class="{isLike : isPostLike}">J'aime</span>
+            <span @click="likePost(myPost.id); isPostLike ? myPost.like_count -= 1 : myPost.like_count += 1" :class="{isLike : isPostLike}">J'aime</span>
             <span @click="commentPart = !commentPart">Commenter</span>
             <span>Partager</span>
         </div>
         <div v-if="commentPart" class="line"></div>
         <div v-if="commentPart" class="commentPart">
-            <b-form @submit.prevent="createComment()">
+            <b-form @submit.prevent="createComment(myPost.id)">
                 <b-form-input
                     v-model="formComment.message"
-                    placeholder="Ecrivez un commentaire...">
+                    placeholder="Ecrivez un commentaire..."
+                    ref="comment"
+                >
                 </b-form-input>
             </b-form>
-            <Comment name="Jean" message="Stylé la publication"/>
-            <Comment name="Remi" message="C vré"/>
-            <Comment name="Mael" message="lol"/>
+            <Comment v-for="(comment, index) in comments" :key="index" :comment="comment" :postId="myPost.id"/>
         </div>
-        
     </div>
 </template>
 
@@ -75,8 +77,11 @@ export default {
         return {
             myPost: this.post,
             edit: false,
-            isPostLike: false,
+            isPostLike: this.post.likes_user_id.includes(this.$auth.user.id),
+            postLikeUserName: this.post.likes_user_name.filter(element => element != this.$auth.user.name),
+            comments: this.post.comments,
             commentPart : false,
+            hovered: false,
             formEdit: {
                 message: this.post.message,
             },
@@ -91,8 +96,7 @@ export default {
                 await this.$axios.$delete(`/api/posts/${id}`);
                 this.$emit('remove-post', id)
             } catch(e) {
-                this.errors = e.response.data.errors
-                console.log(e.response.data.message)
+                console.log(e.response.data.errors)
             }
         },
         async updatePost(id) {
@@ -102,12 +106,25 @@ export default {
                 this.myPost = data
                 this.edit = false
             } catch(e) {
-                this.errors = e.response.data.errors
+                console.log(e.response.data.errors)
             }
         },
-        async createComment() {
-            console.log(this.formComment.message)
-            this.formComment.message = ""
+        async likePost(id) {
+            try {
+                await this.$axios.$post(`/api/posts/${id}/likes`);
+                this.isPostLike = !this.isPostLike
+            } catch(e) {
+                console.log(e.response.data.errors)
+            }
+        },
+        async createComment(id) {            
+            try {
+                let {data} = await this.$axios.$post(`/api/posts/${id}/comments`, this.formComment);
+                this.comments.push(data)
+                this.formComment.message = ""
+            } catch(e) {
+                    console.log(e.response.data.errors)
+            }
         },
     },
     mounted() {
@@ -202,11 +219,24 @@ export default {
         }
 
         div {
-            &:nth-child(2) {
-                &:hover {
-                    cursor: pointer;
-                    text-decoration: underline;
-                }
+            cursor: pointer;
+        }
+
+        .showName {
+            position: absolute;
+            margin-top: 30px;
+            padding: 5px 13px;
+            background-color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            border-radius: 10px;
+            color: black;
+            text-transform: capitalize;
+            z-index: 99;
+        }
+
+        .comments {
+            &:hover {
+                text-decoration: underline;
             }
         }
     }
@@ -239,11 +269,9 @@ export default {
 
         .isLike {
             color: #0069D9;
-            text-decoration: underline;
 
             &:hover {
                 color: #0069D9;
-                text-decoration: underline;
             }
         }
     }

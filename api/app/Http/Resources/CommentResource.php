@@ -3,9 +3,8 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\CommentResource;
 
-class PostResource extends JsonResource
+class CommentResource extends JsonResource
 {
 	public function toArray($request) {
 		return [
@@ -16,7 +15,6 @@ class PostResource extends JsonResource
 			'like_count' => $this->likes->count(),
 			'likes_user_id' => $this->likes->pluck('user.id'),
 			'likes_user_name' => $this->likes->pluck('user.name'),
-			'comments' => CommentResource::collection($this->comments),
 			'user' => $this->user,
 		];
 	}

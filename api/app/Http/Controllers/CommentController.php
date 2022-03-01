@@ -2,23 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Post;
-use App\Http\Resources\PostResource;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Post;
+use App\Models\Comment;
+use App\Http\Resources\CommentResource;
 
-
-
-class PostController extends Controller
+class CommentController extends Controller
 {
-    public function index()
-    {
-        $post = post::latest()->get();
-        return PostResource::collection($post);
-    }
-
-    public function store(Request $request)
+    public function store(Request $request, Post $post)
+    
     {
         $rules = [
             "message" => "required|string|between:2,1000",
@@ -37,24 +30,24 @@ class PostController extends Controller
             ], 401);
         }
 
-        $post = New Post;
-        $post->message = $request->message;
-        $post->user()->associate($request->user());
-        
-        $post->save();
+        $comment = New Comment;
+        $comment->message = $request->message;
+        $comment->user()->associate($request->user());
 
-        return new PostResource($post);
+        $post->comments()->save($comment);
+
+        return new CommentResource($comment);
     }
 
-    public function show(Post $post)
+    public function show(Request $request, Post $post, Comment $comment)
     {
-        return new PostResource($post);
+        return new CommentResource($comment);
     }
 
-    public function update(Request $request, Post $post)
+    public function update(Request $request, Post $post, Comment $comment)
     {
-        $this->authorize('update', $post);
-        
+        $this->authorize('update', $comment);
+
         $rules = [
             "message" => "required|string|between:2,1000",
         ];
@@ -71,18 +64,17 @@ class PostController extends Controller
                 "errors" => $validator->errors()
             ], 401);
         }
-        
-        $post->message = $request->get('message', $post->message);
-        
-        $post->save();
 
-        return new PostResource($post);;
+        $comment->body = $request->get('message', $comment->message);
+        $comment->save();
+
+        return new CommentResource($comment);
     }
 
-    public function destroy(Post $post)
+    public function destroy(Post $post, Comment $comment)
     {
-        $this->authorize('destroy', $post);
-        $post->delete();
-        return response(null, 204);
+        $this->authorize('destroy', $comment);
+        $comment->delete();
+		return response(null, 204);
     }
 }
